@@ -1,0 +1,22 @@
+server.port: 8080
+
+#spring:
+#   data:
+#      mongodb:
+#         uri: "mongodb+srv://ingresos:A2MOI5iQ7kp1gn2s@cluster0.ene0i.mongodb.net/ingresos?retryWrites=true&w=majority"
+
+application:
+   name: '@project.artifactId@'
+   version: '@project.version@'
+   timezone: America/Mexico_City
+   tests:
+      enabled: true
+
+logging:
+#   config:
+#      classpath: logback.xml
+#      file: '@logging.config.file@'
+   level:
+      root: '@logging.config.level@'
+      org.springframework: WARN
+
