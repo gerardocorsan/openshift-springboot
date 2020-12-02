@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+export SERVICE_BIN_PATH="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export SERVICE_BASE_PATH=$(dirname $SERVICE_BIN_PATH)
+export SERVICE_HOME=$(dirname $SERVICE_BIN_PATH)
+export SERVICE_LIB=$SERVICE_HOME/lib
+
+export SING_SERVICE_NAME=$(cat $SERVICE_BASE_PATH/NAME)
+export SING_SERVICE_VERSION=$(cat $SERVICE_BASE_PATH/VERSION)
+
+echo "Service name    : $SING_SERVICE_NAME"
+echo "Service version : $SING_SERVICE_VERSION"

@@ -1,5 +1,7 @@
 package com.corsanhub.spring.service;
 
+import java.math.BigDecimal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,19 +19,11 @@ public class ContribuyenteService {
 		this.calculadora = calculadora;
 	}
 
-	public Long calcula(String marca, Integer modelo) {
+	public BigDecimal calcula(String marca, Integer modelo) {
 		logger.info("Calculating ...");
-		Long value = calculadora.calcula(marca, modelo);
+		BigDecimal value = calculadora.calcula(marca, modelo);
 
 		return value;
-
-	}
-
-	public Long calcula2(String marca, Integer modelo) {
-		Long value = calculadora.calcula(marca, modelo);
-
-		return value;
-
 	}
 
 }

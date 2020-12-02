@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+DOCKER_REGISTRY=${1:-"dockerhub:5000"}
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/create-info $DOCKER_REGISTRY
+source $currentPath/get-info
+
+source $currentPath/environment
+
+echo "Removing running container for service [$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+docker stop $SING_SERVICE_NAME
+docker rm $SING_SERVICE_NAME
+
+echo "Starting service [$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION] on container ..."
+docker run -d --name $SING_SERVICE_NAME -p 8070:8070 $DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+DOCKER_REGISTRY=${1:-"dockerhub:5000"}
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/create-info
+source $currentPath/environment
+
+echo "Running service $serviceName ..."
+
+echo "Verifying JAVA instalation ..."
+if type -p java; then
+    echo "JAVA executable found in PATH"
+    JAVA_BIN=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    echo "JAVA executable found in JAVA_HOME"
+    JAVA_BIN="$JAVA_HOME/bin/java"
+else
+    echo "No JAVA installation found, please verify. Exiting ..."
+    exit 1
+fi
+
+if [[ "$JAVA_BIN" ]]; then
+    JAVA_VERSION=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    echo "JAVA Version : $JAVA_VERSION"
+fi
+
+export BIN_PATH="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "BIN path $BIN_PATH"
+export ROOT_PATH=$(dirname $BIN_PATH)
+echo "Building service [$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+
+mvn --settings settings.xml -Pproduction package fabric8:build
+
+echo "Pushing image [$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+docker push "$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION"
+
+

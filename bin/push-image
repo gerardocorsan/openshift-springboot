@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+DOCKER_REGISTRY=${1:-"dockerhub:5000"}
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/create-info $DOCKER_REGISTRY
+source $currentPath/get-info
+
+echo "push service [$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+docker push "$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION"

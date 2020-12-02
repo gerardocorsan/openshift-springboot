@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+DOCKER_REGISTRY=${1:-"dockerhub:5000"}
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/create-info $DOCKER_REGISTRY
+source $currentPath/get-info
+
+echo "Building service [$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+mvn clean package --settings settings.xml -Pproduction -DskipTests -U
+
+echo "Building docker image for service [$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+echo "Service base path [$SERVICE_BASE_PATH]"
+
+cd $SERVICE_BASE_PATH
+docker build -t "$DOCKER_REGISTRY$SING_SERVICE_NAME:$SING_SERVICE_VERSION" -f docker/Dockerfile .

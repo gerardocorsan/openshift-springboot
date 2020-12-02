@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/environment
+
+if test -z "$SERVICE_BIN"; then
+  export SERVICE_BIN="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+fi
+
+if test -z "$SERVICE_HOME"; then
+  export SERVICE_HOME=$(dirname $SERVICE_BIN)
+fi
+
+if test -z "$SERVICE_LIB"; then
+  export SERVICE_LIB=$SERVICE_HOME/lib
+fi
+
+if test -z "$SERVICE_UBER_JAR_NAME"; then
+  export SERVICE_UBER_JAR_NAME="$SING_SERVICE_NAME-$SING_SERVICE_VERSION.jar"
+fi
+
+if test -z "$SERVICE_CONFIG"; then
+  export SERVICE_CONFIG=$SERVICE_HOME/config
+fi
+
+if test -z "$SERVICE_MINIMUM_MEMORY"; then
+  export SERVICE_MINIMUM_MEMORY=512m
+fi
+
+if test -z "$SERVICE_MAXIMUM_MEMORY"; then
+  export SERVICE_MAXIMUM_MEMORY=512m
+fi
+
+start() {
+  # Check for JAVA
+  echo "Verifying JAVA installation ..."
+  if [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    JAVA_BIN="$JAVA_HOME/bin/java"
+  elif type -p java; then
+    JAVA_BIN=java
+  else
+    echo "No JAVA installation found, please verify. Exiting ..."
+    exit 1
+  fi
+
+  echo "Using JVM installed on : $JAVA_BIN ..."
+
+  if [[ "$JAVA_BIN" ]]; then
+    JAVA_VERSION=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+  fi
+
+
+  echo "SERVICE_LIB : $SERVICE_LIB"
+  echo $(ls -lah $SERVICE_LIB)
+
+  if [ -z "$SERVICE_DAEMON" ] ; then
+    $JAVA_BIN -Xms$SERVICE_MINIMUM_MEMORY -Xmx$SERVICE_MAXIMUM_MEMORY -Duser.timezone=America/Mexico_City -jar "$SERVICE_LIB/$SERVICE_UBER_JAR_NAME"
+  else
+    $JAVA_BIN -Xms$SERVICE_MINIMUM_MEMORY -Xmx$SERVICE_MAXIMUM_MEMORY -Duser.timezone=America/Mexico_City -jar "$SERVICE_LIB/$SERVICE_UBER_JAR_NAME" 2>&1 &
+
+    retval=$?
+    pid=$!
+
+    echo "Using PID : $pid"
+
+    echo "$pid" > $SERVICE_HOME/$SING_SERVICE_NAME.pid
+    [ $retval -eq 0 ] || exit $retval
+    if ! ps -p $pid > /dev/null ; then
+      exit 1
+    fi
+    exit 0
+  fi
+  exit $?
+}
+
+stop() {
+  if [ -f "$SERVICE_HOME/$SING_SERVICE_NAME.pid" ] ; then
+    pid=$( cat $SERVICE_HOME/$SING_SERVICE_NAME.pid )
+    kill $pid > /dev/null 2>&1   
+    rm $SERVICE_HOME/$SING_SERVICE_NAME.pid
+    while ps -fea | grep $pid | grep $SING_SERVICE_NAME > /dev/null ; do
+      sleep 1      
+    done
+    echo 
+    exit 0
+  else
+    echo "Unable to find $SERVICE_HOME/$SING_SERVICE_NAME.pid"
+    exit 1
+  fi
+}
+
+restart() {
+  SERVICE_DAEMON=true
+  if [ -f "$SERVICE_HOME/$SING_SERVICE_NAME.pid" ] ; then
+    pid=$( cat $SERVICE_HOME/$SING_SERVICE_NAME.pid )
+    kill $pid > /dev/null 2>&1
+    rm $SERVICE_HOME/$SING_SERVICE_NAME.pid
+    while ps -fea | grep $pid | grep $SING_SERVICE_NAME > /dev/null ; do
+      sleep 1      
+    done
+    echo 
+    start
+  else
+    echo "Unable to find $SERVICE_HOME/$SING_SERVICE_NAME.pid"
+    start
+  fi
+}
+
+if [ $# -eq 0 ]; then
+    printf "Usage: strauz-admin.sh <option> command\n"
+    printf "options:\n"
+    printf "\t-d\tDaemonized option.\n"
+    printf "\t-c\tTakes a custom configuration directory. Overrides SERVICE_CONFIG environment variable.\n"
+    printf "commands:\n"
+    printf "\tstart\tStarts $SING_SERVICE_NAME servcie\n"
+    printf "\tstop\tStops $SING_SERVICE_NAME service using $SERVICE_HOME/$SING_SERVICE_NAME.pid\n"
+    printf "\trestart\tStops and Start $SING_SERVICE_NAME service daemonized\n"
+    exit 1
+fi
+
+while getopts "c:dh" opt; do
+  case $opt in
+    c)
+      SERVICE_CONFIG=$OPTARG
+      ;;
+    d)
+      SERVICE_DAEMON=true
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+shift $(expr $OPTIND - 1 )
+case $1 in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+esac

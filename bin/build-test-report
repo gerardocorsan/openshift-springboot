@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/get-info
+
+echo "Executing tests and creating report ..."
+cd $SERVICE_BASE_PATH
+mvn --settings settings.xml -Pdevelop clean test jacoco:report
+
+JACOCO_CLI_JAR="$HOME/.m2/repository/org/jacoco/org.jacoco.cli/0.8.5/org.jacoco.cli-0.8.5.jar"
+
+echo "Starting test report ..."
+java -jar $SERVICE_BASE_PATH/lib/jacoco-cli.jar \
+  report $SERVICE_BASE_PATH/target/jacoco.exec \
+  --html ./report \
+  --sourcefiles src/main/java \
+  --classfiles target/classes

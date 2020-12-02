@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+export currentPath="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $currentPath/create-info
+source $currentPath/environment
+
+echo "Running service [$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+
+echo "Verifying JAVA instalation ..."
+if type -p java; then
+    echo "JAVA executable found in PATH"
+    JAVA_BIN=java
+elif [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
+    echo "JAVA executable found in JAVA_HOME"
+    JAVA_BIN="$JAVA_HOME/bin/java"
+else
+    echo "No JAVA installation found, please verify. Exiting ..."
+    exit 1
+fi
+
+if [[ "$JAVA_BIN" ]]; then
+    JAVA_VERSION=$("$JAVA_BIN" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+    echo "JAVA Version : $JAVA_VERSION"
+fi
+
+echo "Building service [$SING_SERVICE_NAME:$SING_SERVICE_VERSION] ..."
+mvn clean package --settings settings.xml -Pdevelop -DskipTests
+
+uberJar=$(echo "$SERVICE_BASE_PATH/target/$SING_SERVICE_NAME-$SING_SERVICE_VERSION.jar")
+echo "Running service using UberJAR [$uberJar] ..."
+
+$JAVA_BIN -Xms$SERVICE_MINIMUM_MEMORY -Xmx$SERVICE_MAXIMUM_MEMORY -jar "$uberJar"
+
+

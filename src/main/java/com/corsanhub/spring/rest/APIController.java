@@ -2,6 +2,8 @@ package com.corsanhub.spring.rest;
 
 import static net.logstash.logback.marker.Markers.append;
 
+import java.math.BigDecimal;
+
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
@@ -57,15 +59,26 @@ public class APIController {
 	}
 
 	@RequestMapping(value = "/api/calcula/{marca}/{modelo}", method = RequestMethod.GET)
-	public ResponseEntity<Long> calcula(@PathVariable(value = "marca") String marca, @PathVariable(value = "modelo") String modeloStr) {
+	public ResponseEntity<BigDecimal> calcula(@PathVariable(value = "marca") String marca, @PathVariable(value = "modelo") String modeloStr) {
 		logger.info("Executing calcula function ...");
 
 		Integer modelo = Integer.valueOf(modeloStr);
-		Long result = contribuyenteService.calcula(marca, modelo);
+		BigDecimal result = contribuyenteService.calcula(marca, modelo);
 
-		ResponseEntity<Long> entity = new ResponseEntity<Long>(result, HttpStatus.OK);
+		ResponseEntity<BigDecimal> entity = new ResponseEntity<BigDecimal>(result, HttpStatus.OK);
 		return entity;
 	}
+
+//	@RequestMapping(value = "/api/createCode/{code}", method = RequestMethod.POST)
+//	public ResponseEntity<BigDecimal> createCode(@PathVariable(value = "code") String code) {
+//		logger.info("Executing calcula function ...");
+//
+//		Integer modelo = Integer.valueOf(code);
+//		BigDecimal result = contribuyenteService.calcula(marca, modelo);
+//
+//		ResponseEntity<BigDecimal> entity = new ResponseEntity<BigDecimal>(result, HttpStatus.OK);
+//		return entity;
+//	}
 
 	@PostConstruct
 	private void postConstruct() {
