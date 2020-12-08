@@ -69,6 +69,16 @@ public class APIController {
 		return entity;
 	}
 
+	@RequestMapping(value = "/api/createPersona", method = RequestMethod.GET)
+	public ResponseEntity<String> createPersona() {
+		logger.info("Executing calcula function ...");
+
+		String result = contribuyenteService.callMongo();
+
+		ResponseEntity<String> entity = new ResponseEntity<String>(result, HttpStatus.OK);
+		return entity;
+	}
+
 //	@RequestMapping(value = "/api/createCode/{code}", method = RequestMethod.POST)
 //	public ResponseEntity<BigDecimal> createCode(@PathVariable(value = "code") String code) {
 //		logger.info("Executing calcula function ...");
